@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affury Test Partner — S2S Integration Test Client</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050507;--card:#0e0e14;--card-h:#12121a;
+  --border:rgba(255,255,255,0.08);--border-h:rgba(255,255,255,0.14);
+  --ink:#e8e6e3;--ink2:#a09d98;--ink3:#6b6862;--ink4:#3d3b37;
+  --accent:#c8a86e;--accent-h:#dfc08a;
+  --green:#6ecba0;--green-bg:rgba(110,203,160,0.08);
+  --blue:#6c9ceb;--blue-bg:rgba(108,156,235,0.08);
+  --yellow:#e8c46c;--yellow-bg:rgba(232,196,108,0.08);
+  --red:#e87c8a;--red-bg:rgba(232,124,138,0.08);
+  --serif:'Source Serif 4',Georgia,serif;
+  --sans:'Outfit',system-ui,sans-serif;
+  --mono:'JetBrains Mono','SF Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--ink2);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.wrap{max-width:640px;margin:0 auto;padding:40px 24px 200px}
+.logo{font-family:var(--serif);font-size:20px;font-weight:300;color:var(--ink);margin-bottom:8px}
+.logo b{font-weight:400;color:var(--accent)}
+.page-sub{font-size:12px;color:var(--ink4);letter-spacing:1px;text-transform:uppercase;font-weight:500;margin-bottom:40px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 28px;margin-bottom:20px}
+.card-title{font-family:var(--serif);font-size:22px;font-weight:300;color:var(--ink);letter-spacing:-0.3px;margin-bottom:16px}
+
+/* Status badges */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:16px}
+.badge-green{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green)}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border-left:3px solid var(--blue)}
+.badge-yellow{background:var(--yellow-bg);color:var(--yellow);border-left:3px solid var(--yellow)}
+.badge-red{background:var(--red-bg);color:var(--red);border-left:3px solid var(--red)}
+
+/* Param table */
+.param-table{width:100%;border-collapse:collapse;margin:12px 0}
+.param-table td{padding:6px 0;font-size:13px;vertical-align:top}
+.param-table td:first-child{color:var(--ink3);font-family:var(--mono);font-size:12px;width:120px;padding-right:12px}
+.param-table td:last-child{color:var(--ink);font-family:var(--mono);font-size:12px;word-break:break-all}
+
+/* Form */
+.field{margin-bottom:18px}
+.field-label{display:block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.field-input{width:100%;padding:11px 14px;font-family:var(--sans);font-size:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;color:var(--ink);outline:none;transition:border-color .2s}
+.field-input:focus{border-color:rgba(200,168,110,0.4);box-shadow:0 0 0 3px rgba(200,168,110,0.08)}
+.field-input[readonly]{color:var(--ink3);cursor:default}
+.field-input::placeholder{color:var(--ink4)}
+select.field-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b6862' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Presets */
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.preset-btn{padding:6px 14px;font-size:12px;font-weight:500;font-family:var(--sans);border:1px solid var(--border);border-radius:100px;background:transparent;color:var(--ink3);cursor:pointer;transition:all .2s}
+.preset-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 32px;font-size:14px;font-weight:600;font-family:var(--sans);border-radius:100px;border:none;cursor:pointer;transition:all .25s;letter-spacing:0.3px}
+.btn-primary{background:var(--accent);color:#050507;width:100%}
+.btn-primary:hover{background:var(--accent-h);box-shadow:0 0 24px rgba(200,168,110,0.12)}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--ink3);width:100%}
+.btn-secondary:hover{border-color:var(--border-h);color:var(--ink)}
+.btn-sm{padding:8px 20px;font-size:12px}
+.btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* JSON display */
+.json-block{background:#030305;border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12px;line-height:1.7;overflow-x:auto;color:var(--ink2);white-space:pre-wrap;word-break:break-all;margin:12px 0}
+.json-key{color:var(--blue)}.json-str{color:var(--accent)}.json-num{color:var(--green)}.json-bool{color:var(--yellow)}.json-null{color:var(--ink4)}
+
+/* Debug panel */
+.debug{position:fixed;bottom:0;left:0;right:0;background:#030305;border-top:1px solid var(--border);z-index:100;max-height:45vh;transition:max-height .3s}
+.debug.collapsed{max-height:36px}
+.debug-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;cursor:pointer;user-select:none}
+.debug-title{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:0.5px;text-transform:uppercase}
+.debug-toggle{font-size:14px;color:var(--ink4);transition:transform .2s}
+.debug.collapsed .debug-toggle{transform:rotate(180deg)}
+.debug-body{overflow-y:auto;max-height:calc(45vh - 36px);padding:0 16px 12px}
+.debug-env{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px}
+.debug-env label{font-size:11px;color:var(--ink3);font-family:var(--mono);cursor:pointer;display:flex;align-items:center;gap:4px}
+.debug-env input{accent-color:var(--accent)}
+.debug-url{font-family:var(--mono);font-size:11px;color:var(--accent);margin-left:8px}
+.log-entry{font-family:var(--mono);font-size:11px;line-height:1.6;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.log-time{color:var(--ink4);margin-right:8px}
+.log-info{color:var(--blue)}.log-ok{color:var(--green)}.log-warn{color:var(--yellow)}.log-err{color:var(--red)}
+
+/* Hidden */
+.hidden{display:none!important}
+
+/* Responsive */
+@media(max-width:480px){
+  .wrap{padding:24px 16px 200px}
+  .card{padding:24px 20px}
+  .presets{gap:6px}
+  .btn-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="logo">af<b>fury</b> test partner</div>
+  <div class="page-sub">S2S Integration Test Client</div>
+
+  <!-- STATE 1: Landing -->
+  <div id="state-landing" class="card">
+    <div class="card-title">Incoming Click</div>
+    <div id="no-click" class="badge badge-yellow hidden">No click_id detected — open this page via an Affury tracking link</div>
+    <div id="has-click" class="badge badge-green hidden">click_id captured</div>
+    <table class="param-table" id="params-table"></table>
+    <div id="cookie-status" style="font-size:12px;color:var(--ink3);margin:12px 0"></div>
+    <button class="btn btn-primary" id="btn-continue" onclick="showRegistration()">Continue to Registration</button>
+  </div>
+
+  <!-- STATE 2: Registration -->
+  <div id="state-registration" class="card hidden">
+    <div class="card-title">Fake Registration</div>
+    <p style="font-size:13px;color:var(--ink3);margin-bottom:20px">Fill the form and submit. A postback will be sent to Affury API.</p>
+
+    <div style="margin-bottom:20px">
+      <div class="field-label">Quick Presets</div>
+      <div class="presets">
+        <button class="preset-btn" onclick="applyPreset(45,'US')">US 40+ (valid)</button>
+        <button class="preset-btn" onclick="applyPreset(25,'US')">US young (rejected)</button>
+        <button class="preset-btn" onclick="applyPreset(45,'DE')">Non-US (rejected)</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Name</label>
+      <input type="text" class="field-input" id="f-name" placeholder="John Doe" value="Test User">
+    </div>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input type="email" class="field-input" id="f-email" placeholder="user@example.com" value="testuser@example.com">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field">
+        <label class="field-label">Age</label>
+        <input type="number" class="field-input" id="f-age" min="18" max="120" step="1" value="45">
+      </div>
+      <div class="field">
+        <label class="field-label">GEO</label>
+        <select class="field-input" id="f-geo">
+          <option value="US" selected>US</option>
+          <option value="UK">UK</option>
+          <option value="DE">DE</option>
+          <option value="CA">CA</option>
+          <option value="FR">FR</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Gender</label>
+      <select class="field-input" id="f-gender">
+        <option value="male" selected>Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">click_id (from cookie)</label>
+      <input type="text" class="field-input" id="f-clickid" readonly>
+    </div>
+    <div id="reg-error" class="badge badge-red hidden" style="margin-top:8px"></div>
+    <button class="btn btn-primary" id="btn-register" onclick="doRegister()" style="margin-top:8px">Complete Registration</button>
+    <button class="btn btn-secondary btn-sm" onclick="showLanding()" style="margin-top:10px">Back</button>
+  </div>
+
+  <!-- STATE 3: Result -->
+  <div id="state-result" class="card hidden">
+    <div class="card-title">Postback Result</div>
+    <div id="result-badge"></div>
+    <div id="result-detail" style="font-size:13px;color:var(--ink2);margin-bottom:12px"></div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">HTTP <span id="result-status"></span></div>
+    <div class="json-block" id="result-json"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary btn-sm" onclick="doDeposit()">Test Deposit Postback</button>
+      <button class="btn btn-secondary btn-sm" onclick="doDuplicate()">Send Duplicate</button>
+      <button class="btn btn-secondary btn-sm" onclick="doReset()">Start Over</button>
+    </div>
+  </div>
+
+  <!-- Extra results for deposit/duplicate -->
+  <div id="extra-results"></div>
+</div>
+
+<!-- DEBUG PANEL -->
+<div class="debug" id="debug">
+  <div class="debug-header" onclick="toggleDebug()">
+    <span class="debug-title">Debug Log</span>
+    <span class="debug-toggle" id="debug-arrow">&#9660;</span>
+  </div>
+  <div class="debug-body" id="debug-body">
+    <div class="debug-env">
+      <label><input type="radio" name="env" value="dev" checked onchange="setEnv('dev')"> DEV</label>
+      <label><input type="radio" name="env" value="prod" onchange="setEnv('prod')"> PROD</label>
+      <span class="debug-url" id="debug-api-url"></span>
+    </div>
+    <div id="debug-log"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ⚠️ In production: NEVER expose API keys in frontend code.
+//    Call the postback endpoint from your SERVER, not the browser.
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  API_DEV:  'https://affury-api-dev.letdate.dev',
+  API_PROD: 'https://api.affury.com',
+  API_KEY:  'd02f3f9fe954877f0ffbd2b5ceead28835f1161b1606c0d50ab832485a9e9e1e',
+  COOKIE:   'affury_click_id',
+  COOKIE_TTL: 30, // days
+  TIMEOUT:  10000, // ms
+};
+
+let apiUrl = CONFIG.API_DEV;
+let lastPayload = null;
+
+// ═══════════════════════════════════════════════════════════════
+// COOKIE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function setCookie(name, value, days) {
+  document.cookie = `${name}=${encodeURIComponent(value)};max-age=${86400*days};path=/;SameSite=Lax`;
+}
+function getCookie(name) {
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function deleteCookie(name) {
+  document.cookie = `${name}=;max-age=0;path=/`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEBUG LOG
+// ═══════════════════════════════════════════════════════════════
+function log(msg, type='info') {
+  const ts = new Date().toTimeString().slice(0,8);
+  const cls = {info:'log-info',ok:'log-ok',warn:'log-warn',err:'log-err'}[type]||'log-info';
+  const el = document.getElementById('debug-log');
+  el.innerHTML += `<div class="log-entry"><span class="log-time">${ts}</span><span class="${cls}">${escHtml(msg)}</span></div>`;
+  el.parentElement.scrollTop = el.parentElement.scrollHeight;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleDebug() {
+  document.getElementById('debug').classList.toggle('collapsed');
+}
+
+function setEnv(env) {
+  apiUrl = env === 'prod' ? CONFIG.API_PROD : CONFIG.API_DEV;
+  document.getElementById('debug-api-url').textContent = apiUrl;
+  log(`Environment → ${env.toUpperCase()} (${apiUrl})`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JSON SYNTAX HIGHLIGHT
+// ═══════════════════════════════════════════════════════════════
+function highlightJson(obj) {
+  const json = JSON.stringify(obj, null, 2);
+  return json.replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, ': <span class="json-str">"$1"</span>')
+    .replace(/: (\d+\.?\d*)/g, ': <span class="json-num">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="json-bool">$1</span>')
+    .replace(/: (null)/g, ': <span class="json-null">$1</span>');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function show(id) {
+  ['state-landing','state-registration','state-result'].forEach(s =>
+    document.getElementById(s).classList.toggle('hidden', s !== id));
+}
+function showLanding() { show('state-landing'); }
+function showRegistration() {
+  document.getElementById('f-clickid').value = getCookie(CONFIG.COOKIE) || '(none)';
+  document.getElementById('reg-error').classList.add('hidden');
+  show('state-registration');
+  log('Registration form opened');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════════════════════════════
+function applyPreset(age, geo) {
+  document.getElementById('f-age').value = age;
+  document.getElementById('f-geo').value = geo;
+  log(`Preset applied: age=${age}, geo=${geo}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POSTBACK REQUEST
+// ═══════════════════════════════════════════════════════════════
+async function sendPostback(payload) {
+  const url = `${apiUrl}/internal/postback`;
+  const headers = { 'Content-Type': 'application/json', 'X-Internal-Key': CONFIG.API_KEY };
+
+  log(`POST ${url}`, 'info');
+  log(`Request: ${JSON.stringify(payload)}`, 'info');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+  const t0 = performance.now();
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    const ms = Math.round(performance.now() - t0);
+    let data;
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { data = { _raw: text }; }
+
+    log(`Response ${res.status} (${ms}ms): ${JSON.stringify(data)}`, res.ok ? 'ok' : 'err');
+    return { status: res.status, data, ms };
+  } catch (err) {
+    clearTimeout(timer);
+    const msg = err.name === 'AbortError' ? 'Request timed out (10s)' : err.message;
+    log(`Network error: ${msg}`, 'err');
+    return { status: 0, data: { error: { code: 'NETWORK_ERROR', message: msg } }, ms: 0 };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REGISTRATION SUBMIT
+// ═══════════════════════════════════════════════════════════════
+async function doRegister() {
+  const clickId = getCookie(CONFIG.COOKIE);
+  const age = parseInt(document.getElementById('f-age').value);
+  const geo = document.getElementById('f-geo').value;
+  const errEl = document.getElementById('reg-error');
+  const btn = document.getElementById('btn-register');
+
+  // Validate
+  if (!clickId) {
+    errEl.textContent = 'No click_id in cookie. Open this page via a tracking link first.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if (!age || !isFinite(age) || age < 18 || age > 120) {
+    errEl.textContent = 'Age must be between 18 and 120.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
+  lastPayload = { click_id: clickId, event_type: 'REGISTRATION', age, geo };
+
+  btn.disabled = true;
+  btn.textContent = 'Sending postback...';
+
+  const result = await sendPostback(lastPayload);
+
+  btn.disabled = false;
+  btn.textContent = 'Complete Registration';
+
+  showResult(result);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEPOSIT TEST
+// ═══════════════════════════════════════════════════════════════
+async function doDeposit() {
+  const clickId = getCookie(CONFIG.COOKIE);
+  if (!clickId) { log('No click_id for deposit test', 'err'); return; }
+
+  const payload = { click_id: clickId, event_type: 'DEPOSIT', age: parseInt(document.getElementById('f-age').value) || 45, geo: 'US', revenue: 49.99 };
+  log('Sending DEPOSIT postback...', 'info');
+  const result = await sendPostback(payload);
+  appendExtraResult('Deposit Postback', result);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DUPLICATE TEST
+// ═══════════════════════════════════════════════════════════════
+async function doDuplicate() {
+  if (!lastPayload) { log('No previous payload to duplicate', 'err'); return; }
+  log('Sending duplicate postback...', 'info');
+  const result = await sendPostback(lastPayload);
+  appendExtraResult('Duplicate Test', result);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════════
+function doReset() {
+  deleteCookie(CONFIG.COOKIE);
+  lastPayload = null;
+  document.getElementById('extra-results').innerHTML = '';
+  log('Cookie deleted, state reset', 'warn');
+  init();
+  showLanding();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RESULT DISPLAY
+// ═══════════════════════════════════════════════════════════════
+function showResult(result) {
+  const { status, data, ms } = result;
+  const badgeEl = document.getElementById('result-badge');
+  const detailEl = document.getElementById('result-detail');
+  const statusEl = document.getElementById('result-status');
+  const jsonEl = document.getElementById('result-json');
+
+  statusEl.textContent = `${status} (${ms}ms)`;
+  jsonEl.innerHTML = highlightJson(data);
+
+  if (data.success === true && data.duplicate) {
+    badgeEl.innerHTML = '<div class="badge badge-blue">Duplicate — already recorded (idempotent)</div>';
+    detailEl.textContent = 'This click_id + event_type combination was already processed. Safe to retry.';
+  } else if (data.success === true) {
+    badgeEl.innerHTML = '<div class="badge badge-green">Conversion created</div>';
+    detailEl.textContent = `Conversion ID: ${data.conversionId || '—'}`;
+  } else if (data.success === false && data.reason === 'age_restricted') {
+    badgeEl.innerHTML = '<div class="badge badge-yellow">Age restricted — user is under 40</div>';
+    detailEl.textContent = data.message || 'No payout for users under 40.';
+  } else if (data.success === false && data.reason === 'geo_restricted') {
+    badgeEl.innerHTML = '<div class="badge badge-yellow">GEO restricted — non-US traffic</div>';
+    detailEl.textContent = data.message || 'Only US traffic accepted.';
+  } else if (data.success === false && data.reason === 'age_missing') {
+    badgeEl.innerHTML = '<div class="badge badge-red">Age missing — required field</div>';
+    detailEl.textContent = data.message || 'Age is required for every postback.';
+  } else if (data.success === false && data.reason === 'offer_not_active') {
+    badgeEl.innerHTML = '<div class="badge badge-red">Offer not active</div>';
+    detailEl.textContent = 'The offer is paused, expired, or cancelled.';
+  } else if (status === 401) {
+    badgeEl.innerHTML = '<div class="badge badge-red">Unauthorized — invalid API key</div>';
+    detailEl.textContent = 'Check X-Internal-Key header or key query parameter.';
+  } else if (status === 404) {
+    badgeEl.innerHTML = '<div class="badge badge-red">Not found — click_id unknown</div>';
+    detailEl.textContent = 'The click_id was not found in our system. Was it generated by our tracker?';
+  } else if (status === 429) {
+    badgeEl.innerHTML = '<div class="badge badge-red">Rate limited — 300/min exceeded</div>';
+    detailEl.textContent = 'Wait and retry. Global keys are exempt from rate limits.';
+  } else if (status >= 500 || status === 0) {
+    badgeEl.innerHTML = '<div class="badge badge-red">Server error</div>';
+    detailEl.textContent = data?.error?.message || 'Internal server error or network failure.';
+  } else {
+    badgeEl.innerHTML = `<div class="badge badge-red">Error (${status})</div>`;
+    detailEl.textContent = data?.error?.message || JSON.stringify(data);
+  }
+
+  show('state-result');
+}
+
+function appendExtraResult(title, result) {
+  const { status, data, ms } = result;
+  let badgeCls, badgeText;
+  if (data.success && data.duplicate) { badgeCls = 'badge-blue'; badgeText = 'Duplicate'; }
+  else if (data.success) { badgeCls = 'badge-green'; badgeText = `Success: ${data.conversionId || ''}`; }
+  else if (data.reason) { badgeCls = 'badge-yellow'; badgeText = data.reason; }
+  else { badgeCls = 'badge-red'; badgeText = `Error ${status}`; }
+
+  document.getElementById('extra-results').innerHTML += `
+    <div class="card" style="margin-top:12px">
+      <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px">${escHtml(title)}</div>
+      <div class="badge ${badgeCls}">${escHtml(badgeText)}</div>
+      <div style="font-size:11px;color:var(--ink3)">HTTP ${status} (${ms}ms)</div>
+      <div class="json-block">${highlightJson(data)}</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  const params = new URLSearchParams(window.location.search);
+  const urlClickId = params.get('click_id');
+  const cookieClickId = getCookie(CONFIG.COOKIE);
+
+  // Populate params table
+  const tracked = ['click_id','sub1','sub2','sub3','sub4','sub5','utm_source','utm_medium','utm_campaign','utm_content','utm_term','zone_id'];
+  const tableEl = document.getElementById('params-table');
+  let rows = '';
+  let hasAny = false;
+  for (const key of tracked) {
+    const val = params.get(key);
+    if (val) {
+      rows += `<tr><td>${key}</td><td>${escHtml(val)}</td></tr>`;
+      hasAny = true;
+    }
+  }
+  if (!hasAny && !cookieClickId) {
+    rows = '<tr><td colspan="2" style="color:var(--ink4)">No tracking parameters detected</td></tr>';
+  }
+  tableEl.innerHTML = rows;
+
+  // Handle click_id
+  let clickId = null;
+  let cookieMsg = '';
+
+  if (urlClickId) {
+    clickId = urlClickId;
+    setCookie(CONFIG.COOKIE, clickId, CONFIG.COOKIE_TTL);
+    cookieMsg = `Cookie set: ${CONFIG.COOKIE}=${clickId} (${CONFIG.COOKIE_TTL}d TTL)`;
+    log(`click_id extracted from URL: ${clickId}`, 'ok');
+    log(cookieMsg, 'info');
+  } else if (cookieClickId) {
+    clickId = cookieClickId;
+    cookieMsg = `Cookie found from previous visit: ${clickId}`;
+    log(`click_id loaded from cookie: ${clickId}`, 'info');
+  } else {
+    cookieMsg = 'No click_id in URL or cookie';
+    log('No click_id detected — open via tracking link', 'warn');
+  }
+
+  document.getElementById('cookie-status').textContent = cookieMsg;
+  document.getElementById('no-click').classList.toggle('hidden', !!clickId);
+  document.getElementById('has-click').classList.toggle('hidden', !clickId);
+  document.getElementById('btn-continue').disabled = !clickId;
+
+  // Set env display
+  document.getElementById('debug-api-url').textContent = apiUrl;
+  log(`Page loaded (env: ${apiUrl.includes('dev') ? 'DEV' : 'PROD'})`);
+}
+
+init();
+</script>
+</body>
+</html>
